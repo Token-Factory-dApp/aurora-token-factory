@@ -8,6 +8,7 @@ import contractByteCode from "../contract/bytecode.json";
 import { BYTECODE } from "../contract/bytecode";
 import { SOURCE_CODE, SOURCE_CODE_2 } from "../contract/ERC20_flat";
 import { Button, Card, CardContent, Grid, TextField } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 function Create() {
   const MAINNET_ID = "0x4e454152";
@@ -23,6 +24,8 @@ function Create() {
   const decimalsRef = useRef();
   const supplyRef = useRef();
   const ownerRef = useRef();
+  const history = useNavigate();
+
 
   async function requestAccount() {
     if (window.ethereum.chainId !== CHAIN_ID) {
@@ -34,6 +37,7 @@ function Create() {
     
     await window.ethereum.request({ method: "eth_requestAccounts" });
   }
+
 
   async function deploy(event) {
     event.preventDefault();
@@ -73,6 +77,7 @@ function Create() {
     }
   }
 
+
   async function verify(contactAddress) {
     try {
       const response = await axios.post(
@@ -99,15 +104,16 @@ function Create() {
     }
   }
 
+
   return (
-    <div>
+    <div className="create">
       <h1>Create</h1>
       <form onSubmit={deploy}>
         <Grid container spacing={1}>
-          <Grid xs={12} md={4} lg={3} item>
+          <Grid xs={12} md={4} item>
+            <label>Name<span> *</span></label>
             <TextField
               inputRef={nameRef}
-              label="Name"
               placeholder="e.g. Super Cool Token"
               variant="outlined"
               size="small"
@@ -115,10 +121,10 @@ function Create() {
               required
             />
           </Grid>
-          <Grid xs={12} md={4} lg={3} item>
+          <Grid xs={12} md={4} item>
+            <label>Symbol<span> *</span></label>
             <TextField
               inputRef={symbolRef}
-              label="Symbol"
               placeholder="e.g. SCT"
               variant="outlined"
               size="small"
@@ -126,11 +132,11 @@ function Create() {
               required
             />
           </Grid>
-          <Grid xs={12} md={4} lg={3} item>
+          <Grid xs={12} md={4} item>
+            <label>Decimals<span> *</span></label>
             <TextField
               inputRef={decimalsRef}
               type="number"
-              label="Decimals"
               placeholder="e.g. 18"
               variant="outlined"
               size="small"
@@ -139,11 +145,11 @@ function Create() {
               required
             />
           </Grid>
-          <Grid xs={12} md={4} lg={3} item>
+          <Grid xs={12} md={4} item>
+            <label>Total supply<span> *</span></label>
             <TextField
               inputRef={supplyRef}
               type="number"
-              label="Total supply"
               placeholder="e.g. 1000000000"
               variant="outlined"
               size="small"
@@ -152,17 +158,17 @@ function Create() {
               required
             />
           </Grid>
-          <Grid xs={12} md={4} lg={3} item>
+          <Grid xs={12} md={8} item>
+            <label>Owner address</label>
             <TextField
               inputRef={ownerRef}
-              label="Owner address"
               placeholder="e.g. 0xabc123abc123abc123abc123abc123abc123abc1"
               variant="outlined"
               size="small"
               fullWidth
             />
           </Grid>
-          <Grid xs={12} md={4} lg={3} item>
+          <Grid xs={12} item>
             <Button type="submit" variant="contained" color="primary" fullWidth>
               Create
             </Button>
@@ -170,11 +176,11 @@ function Create() {
         </Grid>
       </form>
 
-      <Grid xs={12} md={4} lg={3} item>
+      {/* <Grid xs={12} md={4} lg={3} item>
         <Button onClick={verify} variant="contained" color="primary" fullWidth>
           Verify
         </Button>
-      </Grid>
+      </Grid> */}
     </div>
   );
 }

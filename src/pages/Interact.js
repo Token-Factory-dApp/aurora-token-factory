@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { ethers } from "ethers";
-import { ContractFactory } from "ethers";
 import { Button, Grid, TextField } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import contractAbi from "../contract/abi.json";
 
 function Interact() {
   const MAINNET_ID = "0x4e454152";
@@ -21,15 +21,14 @@ function Interact() {
   const [notFound, setNotFound] = useState(false);
   const addressRef = useRef();
   const history = useNavigate();
-  
   const { contractAddress } = useParams();
 
-    useEffect(() => {
-      if (contractAddress) {
-        getTokenInfo();
-        getAbi();
-      } else {
-        setMetadata();
+  useEffect(() => {
+    if (contractAddress) {
+      getTokenInfo();
+      getAbi();
+    } else {
+      setMetadata();
         setAbi();
         setFuncs([]);
         setNotFound(false);
@@ -40,11 +39,11 @@ function Interact() {
   async function requestAccount() {
     if (window.ethereum.chainId !== CHAIN_ID) {
       await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: CHAIN_ID }]
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: CHAIN_ID }],
       });
     }
-    
+
     await window.ethereum.request({ method: "eth_requestAccounts" });
   }
 
@@ -69,13 +68,17 @@ function Interact() {
 
 
   async function getAbi() {
+    setAbi(contractAbi);
+    getContractFunctions(contractAbi);
+    return
+
     try {
       const response = await axios.get(
         `${BASE_URL}/api?module=contract&action=getabi&address=${contractAddress}`
       );
 
       if (response.data?.result) {
-        setAbi(response.data.result);
+        setAbi(JSON.parse(response.data.result));
         getContractFunctions(JSON.parse(response.data.result));
       } else {
         console.log(response);
@@ -89,7 +92,10 @@ function Interact() {
   function getContractFunctions(abi) {
     setFuncs([]);
 
-    abi.forEach((element) => {
+    const abiFunctions = abi.filter(element => element.type === "function")
+      .sort((a, b) => a.stateMutability === "view" ? 1 : -1);
+
+    abiFunctions.forEach((element) => {
       if (element.type === "function") {
         let func = `${element.name}(`;
         element.inputs.forEach((input, index) => {
@@ -156,16 +162,16 @@ function Interact() {
 
   function search() {
     if (addressRef.current.value) {
-      history('/Interact/' + addressRef.current.value);
+      history("/Interact/" + addressRef.current.value);
     }
   }
 
 
   return (
-    <div>
+    <div className="interact">
       <h1>Interact</h1>
-      
-      { metadata ?
+
+      {metadata ? (
         <div>
           <div>
             <span>Contact address: </span>
@@ -190,12 +196,15 @@ function Interact() {
           <div>
             <span>Decimals: </span>
             <span>{metadata.decimals}</span>
-          </div>  
-          <a target="_blank" href={`${BASE_URL}/address/${contractAddress}/contracts`}>
+          </div>
+          <a
+            target="_blank"
+            href={`${BASE_URL}/address/${contractAddress}/contracts`}
+          >
             View in explorer
           </a>
-        </div> 
-        :
+        </div>
+      ) : (
         <div>
           <Grid xs={12} item>
             <Button
@@ -214,14 +223,14 @@ function Interact() {
               size="small"
             />
           </Grid>
-          { notFound && 
+          {notFound && (
             <span>Token not found for contact address {contractAddress}.</span>
-          }
+          )}
         </div>
-      }   
+      )}
 
       {funcs.map((func) => (
-        <Grid xs={12} item key={func.name} name={func.name}>
+        <Grid xs={12} item key={func.name} name={func.name} className="functions">
           <Button
             type="submit"
             variant="contained"
@@ -241,6 +250,7 @@ function Interact() {
               name={`${func.name}-${input.name}`}
               onChange={inputChange}
               key={input.name}
+              className="argument"
             />
           ))}
         </Grid>

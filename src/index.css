@@ -1,5 +1,26 @@
-/* #008080ff */
-/* #76ffffff */
 .main-container {
-    padding: 0 50px;
+    padding: 0 50px 50px 50px;
+    max-width: 1000px;
+    margin: auto;
+}
+
+form label span {
+    color: #008080ff;
+}
+
+.create form button {
+    margin-top: 20px;
+}
+
+.interact .functions {
+    padding-top: 20px;
+}
+
+.interact .functions button {
+    text-transform: none;
+    margin-right: 5px;
+}
+
+.interact .functions .argument {
+    margin-left: 10px;
 }
