@@ -12,15 +12,38 @@ form label span {
     margin-top: 20px;
 }
 
-.interact .functions {
+.interact .function {
     padding-top: 20px;
 }
 
-.interact .functions button {
+.interact .function button {
     text-transform: none;
     margin-right: 5px;
 }
 
-.interact .functions .argument {
+.interact .function .argument {
     margin-left: 10px;
+}
+
+.interact .search {
+    text-align: center;
+}
+
+.interact .search .input {
+    margin-left: 10px;
+    width: 450px;
+}
+
+.create h1, .interact h1 {
+    text-align: center;
+}
+
+.link {
+    color: #76ffffff;
+    text-decoration: none;
+}
+
+.link svg {
+    vertical-align: middle;
+    margin-left: 2px;
 }

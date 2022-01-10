@@ -1,41 +1,44 @@
 import { useState, useRef, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ethers } from "ethers";
 import { Button, Grid, TextField } from "@mui/material";
-import { useParams } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 import contractAbi from "../contract/abi.json";
 
 function Interact() {
+  /**
+   * Constants
+   */
   const MAINNET_ID = "0x4e454152";
   const TESTNET_ID = "0x4e454153";
   const MAINNET_BASE_URL = "https://explorer.mainnet.aurora.dev";
   const TESTNET_BASE_URL = "https://explorer.testnet.aurora.dev";
-
   const CHAIN_ID = TESTNET_ID;
   const BASE_URL = TESTNET_BASE_URL;
-
-  const [funcs, setFuncs] = useState([]);
-  const [abi, setAbi] = useState();
+  const [abiFuncs, setAbiFuncs] = useState([]);
   const [metadata, setMetadata] = useState();
   const [notFound, setNotFound] = useState(false);
   const addressRef = useRef();
   const history = useNavigate();
   const { contractAddress } = useParams();
 
+  /**
+   * On compenent load, gets token data if an address is supplied
+   */
   useEffect(() => {
     if (contractAddress) {
       getTokenInfo();
-      getAbi();
     } else {
       setMetadata();
-        setAbi();
-        setFuncs([]);
-        setNotFound(false);
-      }
-    }, [contractAddress]);
+      setAbiFuncs([]);
+      setNotFound(false);
+    }
+  }, [contractAddress]);
 
-
+  /**
+   * Requests for Metamask account
+   */
   async function requestAccount() {
     if (window.ethereum.chainId !== CHAIN_ID) {
       await window.ethereum.request({
@@ -47,7 +50,9 @@ function Interact() {
     await window.ethereum.request({ method: "eth_requestAccounts" });
   }
 
-
+  /**
+   * Gets token data
+   */
   async function getTokenInfo() {
     try {
       const response = await axios.get(
@@ -57,6 +62,9 @@ function Interact() {
       if (response.data?.result) {
         setMetadata(response.data.result);
         setNotFound(false);
+        if (response.data.result.type === "ERC-20") {
+          getContractFunctions(contractAbi);
+        }
       } else {
         console.log(response);
         setNotFound(true);
@@ -66,19 +74,19 @@ function Interact() {
     }
   }
 
-
+  /**
+   * Gets contact ABI (contract must be verified)
+   * TODO Currently the contract functions are extrated by an static ABI.
+   *      In the future we can use this method to get the ABI dynamically from a verified cotract,
+   *      in order to support different contract structures.
+   */
   async function getAbi() {
-    setAbi(contractAbi);
-    getContractFunctions(contractAbi);
-    return
-
     try {
       const response = await axios.get(
         `${BASE_URL}/api?module=contract&action=getabi&address=${contractAddress}`
       );
 
       if (response.data?.result) {
-        setAbi(JSON.parse(response.data.result));
         getContractFunctions(JSON.parse(response.data.result));
       } else {
         console.log(response);
@@ -88,52 +96,35 @@ function Interact() {
     }
   }
 
-
+  /**
+   * Gets contract functions out of its ABI
+   */
   function getContractFunctions(abi) {
-    setFuncs([]);
+    const abiFunctions = abi
+      .filter((element) => element.type === "function")
+      .sort((a, b) => (a.stateMutability === "view" ? 1 : -1));
 
-    const abiFunctions = abi.filter(element => element.type === "function")
-      .sort((a, b) => a.stateMutability === "view" ? 1 : -1);
-
-    abiFunctions.forEach((element) => {
-      if (element.type === "function") {
-        let func = `${element.name}(`;
-        element.inputs.forEach((input, index) => {
-          func += `${input.type} ${input.name}`;
-          if (index < element.inputs.length - 1) {
-            func += ", ";
-          }
-        });
-        func += "): ";
-        if (element.outputs.length) {
-          element.outputs.forEach((output, index) => {
-            func += output.type;
-            if (index < element.outputs.length - 1) {
-              func += ", ";
-            }
-          });
-        } else {
-          func += "void";
-        }
-
-        setFuncs((currArray) => [...currArray, element]);
-      }
-    });
+    setAbiFuncs(abiFunctions);
   }
 
-
+  /**
+   * Detects a change in one of the function inputs and sets the new value
+   * in 'abiFuncs'
+   */
   function inputChange(event) {
     const funcName = event.target.name.split("-")[0];
     const inputName = event.target.name.split("-")[1];
     const inputValue = event.target.value;
 
-    const func = funcs.find((func) => func.name === funcName);
+    const func = abiFuncs.find((func) => func.name === funcName);
     func.inputs.find((input) => input.name === inputName).value = inputValue;
   }
 
-
+  /**
+   * Executes one function of the contract
+   */
   async function execute(event) {
-    const func = funcs.find((func) => func.name === event.target.name);
+    const func = abiFuncs.find((func) => func.name === event.target.name);
     const inputValues = [];
     func.inputs.forEach((input) => {
       inputValues.push(input.value);
@@ -146,11 +137,22 @@ function Interact() {
       try {
         const contract = new ethers.Contract(
           contractAddress,
-          abi,
+          abiFuncs,
           provider.getSigner()
         );
 
         const res = await contract[func.name].apply(this, inputValues);
+        // TODO remove
+        console.log(res);
+
+        func.response =
+          typeof res === "object"
+            ? res._hex
+              ? parseInt(res._hex, 16)
+              : "Error getting response"
+            : res;
+
+        setAbiFuncs([...abiFuncs]);
       } catch (err) {
         console.log("Error: ", err);
       }
@@ -159,17 +161,19 @@ function Interact() {
     }
   }
 
-
+  /**
+   * Searches for a token, given a new contract address.
+   * To do so, the component is reloaded.
+   */
   function search() {
     if (addressRef.current.value) {
       history("/Interact/" + addressRef.current.value);
     }
   }
 
-
   return (
     <div className="interact">
-      <h1>Interact</h1>
+      <h1>Interact with Smart Contract</h1>
 
       {metadata ? (
         <div>
@@ -199,13 +203,21 @@ function Interact() {
           </div>
           <a
             target="_blank"
+            rel="noreferrer"
             href={`${BASE_URL}/address/${contractAddress}/contracts`}
+            className="link"
           >
-            View in explorer
+            <span>View in explorer</span>
+            <LaunchRoundedIcon fontSize="small" />
           </a>
+          {metadata.type !== "ERC-20" && (
+            <div>
+              Currently only interaction with ERC-20 tokens is supported.
+            </div>
+          )}
         </div>
       ) : (
-        <div>
+        <div className="search">
           <Grid xs={12} item>
             <Button
               type="submit"
@@ -216,6 +228,7 @@ function Interact() {
               Search
             </Button>
             <TextField
+              className="input"
               inputRef={addressRef}
               label="Contract address"
               placeholder="e.g. 0xabc123abc123abc123abc123abc123abc123abc1"
@@ -229,31 +242,34 @@ function Interact() {
         </div>
       )}
 
-      {funcs.map((func) => (
-        <Grid xs={12} item key={func.name} name={func.name} className="functions">
-          <Button
-            type="submit"
-            variant="contained"
-            color={func.stateMutability === "view" ? "primary" : "secondary"}
-            name={func.name}
-            onClick={execute}
-            key={func.name}
-          >
-            {func.name}
-          </Button>
-          {func.inputs.map((input) => (
-            <TextField
-              label={`${input.name}: ${input.type}`}
-              placeholder={`${input.name}: ${input.type}`}
-              variant="outlined"
-              size="small"
-              name={`${func.name}-${input.name}`}
-              onChange={inputChange}
-              key={input.name}
-              className="argument"
-            />
-          ))}
-        </Grid>
+      {abiFuncs.map((func) => (
+        <div key={func.name} name={func.name} className="function">
+          <div>
+            <Button
+              type="submit"
+              variant="contained"
+              color={func.stateMutability === "view" ? "primary" : "secondary"}
+              name={func.name}
+              onClick={execute}
+              key={func.name}
+            >
+              {func.name}
+            </Button>
+            {func.inputs.map((input) => (
+              <TextField
+                label={`${input.name}: ${input.type}`}
+                placeholder={`${input.name}: ${input.type}`}
+                variant="outlined"
+                size="small"
+                name={`${func.name}-${input.name}`}
+                onChange={inputChange}
+                key={input.name}
+                className="argument"
+              />
+            ))}
+          </div>
+          <div>{func.response}</div>
+        </div>
       ))}
     </div>
   );
