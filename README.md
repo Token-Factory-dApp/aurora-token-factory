@@ -1,3 +1,11 @@
+<h1 align="center">Aurora Token Factory</h1>
+<p align="center">
+  <img src="logo512.png" width="350" title="Aurora Token Factory">
+</p>
+
+[Website](https://aurora-token-factory.web.app/)
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
