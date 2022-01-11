@@ -3,7 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ethers } from "ethers";
 import { Button, Grid, TextField } from "@mui/material";
+import { Divider } from "@material-ui/core";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
+import Alert from "@mui/material/Alert";
+import CloseIcon from "@mui/icons-material/Close";
+import IconButton from "@mui/material/IconButton";
 import contractAbi from "../contract/abi.json";
 
 function Interact() {
@@ -19,6 +25,7 @@ function Interact() {
   const [abiFuncs, setAbiFuncs] = useState([]);
   const [metadata, setMetadata] = useState();
   const [notFound, setNotFound] = useState(false);
+  const [alert, setAlert] = useState();
   const addressRef = useRef();
   const history = useNavigate();
   const { contractAddress } = useParams();
@@ -27,12 +34,12 @@ function Interact() {
    * On compenent load, gets token data if an address is supplied
    */
   useEffect(() => {
+    setMetadata();
+    setAbiFuncs([]);
+    setNotFound(false);
+
     if (contractAddress) {
       getTokenInfo();
-    } else {
-      setMetadata();
-      setAbiFuncs([]);
-      setNotFound(false);
     }
   }, [contractAddress]);
 
@@ -80,21 +87,21 @@ function Interact() {
    *      In the future we can use this method to get the ABI dynamically from a verified cotract,
    *      in order to support different contract structures.
    */
-  async function getAbi() {
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/api?module=contract&action=getabi&address=${contractAddress}`
-      );
+  // async function getAbi() {
+  //   try {
+  //     const response = await axios.get(
+  //       `${BASE_URL}/api?module=contract&action=getabi&address=${contractAddress}`
+  //     );
 
-      if (response.data?.result) {
-        getContractFunctions(JSON.parse(response.data.result));
-      } else {
-        console.log(response);
-      }
-    } catch (err) {
-      console.log("Error: ", err);
-    }
-  }
+  //     if (response.data?.result) {
+  //       getContractFunctions(JSON.parse(response.data.result));
+  //     } else {
+  //       console.log(response);
+  //     }
+  //   } catch (err) {
+  //     console.log("Error: ", err);
+  //   }
+  // }
 
   /**
    * Gets contract functions out of its ABI
@@ -102,7 +109,10 @@ function Interact() {
   function getContractFunctions(abi) {
     const abiFunctions = abi
       .filter((element) => element.type === "function")
-      .sort((a, b) => (a.stateMutability === "view" ? 1 : -1));
+      .sort((a, b) => (a.stateMutability === "view" ? 1 : -1))
+      .map((element) => {
+        return { ...element };
+      });
 
     setAbiFuncs(abiFunctions);
   }
@@ -142,8 +152,6 @@ function Interact() {
         );
 
         const res = await contract[func.name].apply(this, inputValues);
-        // TODO remove
-        console.log(res);
 
         func.response =
           typeof res === "object"
@@ -154,10 +162,19 @@ function Interact() {
 
         setAbiFuncs([...abiFuncs]);
       } catch (err) {
-        console.log("Error: ", err);
+        if (err.code === 4001) {
+          setAlert({ type: "info", msg: "Operation canceled by user." });
+        } else if (err.message) {
+          setAlert({ type: "error", msg: err.message });
+        } else {
+          setAlert({
+            type: "error",
+            msg: "An error has occurred in the creation of your token.",
+          });
+        }
       }
     } else {
-      console.log("Metamask not connected.");
+      setAlert({ type: "error", msg: "Connect to your Metamask extension." });
     }
   }
 
@@ -176,46 +193,50 @@ function Interact() {
       <h1>Interact with Smart Contract</h1>
 
       {metadata ? (
-        <div>
-          <div>
-            <span>Contact address: </span>
-            <span>{contractAddress}</span>
-          </div>
-          <div>
-            <span>Name: </span>
-            <span>{metadata.name}</span>
-          </div>
-          <div>
-            <span>Symbol: </span>
-            <span>{metadata.symbol}</span>
-          </div>
-          <div>
-            <span>Type: </span>
-            <span>{metadata.type}</span>
-          </div>
-          <div>
-            <span>Total supply: </span>
-            <span>{metadata.totalSupply}</span>
-          </div>
-          <div>
-            <span>Decimals: </span>
-            <span>{metadata.decimals}</span>
-          </div>
-          <a
-            target="_blank"
-            rel="noreferrer"
-            href={`${BASE_URL}/address/${contractAddress}/contracts`}
-            className="link"
-          >
-            <span>View in explorer</span>
-            <LaunchRoundedIcon fontSize="small" />
-          </a>
-          {metadata.type !== "ERC-20" && (
+        <Card className="metadata-card">
+          <CardContent>
             <div>
-              Currently only interaction with ERC-20 tokens is supported.
+              <span className="label">Contact address:</span>
+              <span>{contractAddress}</span>
             </div>
-          )}
-        </div>
+            <div>
+              <span className="label">Name:</span>
+              <span>{metadata.name}</span>
+            </div>
+            <div>
+              <span className="label">Symbol:</span>
+              <span>{metadata.symbol}</span>
+            </div>
+            <div>
+              <span className="label">Type:</span>
+              <span>{metadata.type}</span>
+            </div>
+            <div>
+              <span className="label">Total supply:</span>
+              <span>{metadata.totalSupply}</span>
+            </div>
+            <div>
+              <span className="label">Decimals:</span>
+              <span>{metadata.decimals}</span>
+            </div>
+            <div className="link-container">
+              <a
+                target="_blank"
+                rel="noreferrer"
+                href={`${BASE_URL}/address/${contractAddress}/contracts`}
+                className="link"
+              >
+                <span>View in explorer</span>
+                <LaunchRoundedIcon fontSize="small" />
+              </a>
+            </div>
+            {metadata.type !== "ERC-20" && (
+              <div>
+                Currently only interaction with ERC-20 tokens is supported.
+              </div>
+            )}
+          </CardContent>
+        </Card>
       ) : (
         <div className="search">
           <Grid xs={12} item>
@@ -268,9 +289,32 @@ function Interact() {
               />
             ))}
           </div>
-          <div>{func.response}</div>
+          <div className="response">{func.response}</div>
+          <Divider />
         </div>
       ))}
+
+      {alert && (
+        <Alert
+          action={
+            <IconButton
+              aria-label="close"
+              color="inherit"
+              size="small"
+              onClick={() => {
+                setAlert();
+              }}
+            >
+              <CloseIcon fontSize="inherit" />
+            </IconButton>
+          }
+          variant="filled"
+          severity={alert.type}
+          sx={{ mt: 3 }}
+        >
+          {alert.msg}
+        </Alert>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 {
-  "name": "erc-20-factory",
+  "name": "aurora-token-factory",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

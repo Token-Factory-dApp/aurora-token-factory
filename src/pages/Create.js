@@ -1,11 +1,15 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ethers, ContractFactory } from "ethers";
 import { Button, Grid, TextField } from "@mui/material";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
+import CloseIcon from "@mui/icons-material/Close";
+import IconButton from "@mui/material/IconButton";
 import contractAbi from "../contract/abi.json";
 import contractByteCode from "../contract/bytecode.json";
-import { SOURCE_CODE } from "../contract/ERC20_flat";
+// import { SOURCE_CODE } from "../contract/ERC20_flat";
 
 function Create() {
   /**
@@ -17,6 +21,8 @@ function Create() {
   const TESTNET_BASE_URL = "https://explorer.testnet.aurora.dev";
   const CHAIN_ID = TESTNET_ID;
   const BASE_URL = TESTNET_BASE_URL;
+  const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState();
   const nameRef = useRef();
   const symbolRef = useRef();
   const decimalsRef = useRef();
@@ -50,6 +56,8 @@ function Create() {
       const signer = provider.getSigner();
 
       try {
+        setLoading(true);
+
         const factory = new ContractFactory(
           contractAbi,
           contractByteCode,
@@ -66,19 +74,53 @@ function Create() {
             : await signer.getAddress()
         );
 
-        // TODO remove
-        console.log(`${BASE_URL}/address/${contract.address}/contracts`);
-        console.log(contract.deployTransaction);
+        setLoading(false);
 
         if (contract.address) {
-          history("/Interact/" + contract.address);
-        }
+          setAlert({ type: "success", msg: "Your token has been created!" });
 
+          const start = new Date();
+          let responseFull = false;
+          do {
+            const response = await axios.get(
+              `${BASE_URL}/api?module=token&action=getToken&contractaddress=${contract.address}`
+            );
+
+            if (
+              response.data?.result &&
+              response.data.result.name &&
+              response.data.result.symbol &&
+              response.data.result.type &&
+              response.data.result.decimals &&
+              response.data.result.totalSupply
+            ) {
+              responseFull = true;
+              history("/Interact/" + contract.address);
+            }
+            await delay(500);
+          } while (!responseFull && new Date() - start < 20000);
+        } else {
+          setAlert({
+            type: "error",
+            msg: "An error has occurred in the creation of your token.",
+          });
+        }
       } catch (err) {
-        console.log("Error: ", err);
+        setLoading(false);
+        debugger
+        if (err.code === 4001) {
+          setAlert({ type: "info", msg: "Operation canceled by user." });
+        } else if (err.message) {
+          setAlert({ type: "error", msg: err.message });
+        } else {
+          setAlert({
+            type: "error",
+            msg: "An error has occurred in the creation of your token.",
+          });
+        }
       }
     } else {
-      console.log("Metamask not connected.");
+      setAlert({ type: "error", msg: "Connect to your Metamask extension." });
     }
   }
 
@@ -86,23 +128,30 @@ function Create() {
    * Verifies contract
    * TODO Currently there seems to be problems with the verification process via API
    */
-  async function verify(contactAddress) {
-    try {
-      const response = await axios.post(
-        `${BASE_URL}/api?module=contract&action=verify`,
+  // async function verify(contactAddress) {
+  //   try {
+  //     const response = await axios.post(
+  //       `${BASE_URL}/api?module=contract&action=verify`,
 
-        {
-          addressHash: contactAddress,
-          compilerVersion: "v0.8.7+commit.e28d00a7",
-          contractSourceCode: SOURCE_CODE,
-          name: "ERC20Token",
-          optimization: true,
-        }
-      );
-      console.log(response);
-    } catch (err) {
-      console.log("Error: ", err);
-    }
+  //       {
+  //         addressHash: contactAddress,
+  //         compilerVersion: "v0.8.7+commit.e28d00a7",
+  //         contractSourceCode: SOURCE_CODE,
+  //         name: "ERC20Token",
+  //         optimization: true,
+  //       }
+  //     );
+  //     console.log(response);
+  //   } catch (err) {
+  //     console.log("Error: ", err);
+  //   }
+  // }
+
+  /**
+   * Helper delay function
+   */
+  function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   return (
@@ -177,12 +226,42 @@ function Create() {
             />
           </Grid>
           <Grid xs={12} item>
-            <Button type="submit" variant="contained" color="primary" fullWidth>
-              Create
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              fullWidth
+              disabled={loading}
+            >
+              Create{" "}
+              {loading && (
+                <CircularProgress color="secondary" className="spinner" />
+              )}
             </Button>
           </Grid>
         </Grid>
       </form>
+      {alert && (
+        <Alert
+          action={
+            <IconButton
+              aria-label="close"
+              color="inherit"
+              size="small"
+              onClick={() => {
+                setAlert();
+              }}
+            >
+              <CloseIcon fontSize="inherit" />
+            </IconButton>
+          }
+          variant="filled"
+          severity={alert.type}
+          sx={{ mt: 3 }}
+        >
+          {alert.msg}
+        </Alert>
+      )}
     </div>
   );
 }

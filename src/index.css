@@ -12,8 +12,14 @@ form label span {
     margin-top: 20px;
 }
 
+.interact .label {
+    color: #76ffffff;
+    margin-right: 5px;
+    font-weight: bold;
+}
+
 .interact .function {
-    padding-top: 20px;
+    padding-top: 10px;
 }
 
 .interact .function button {
@@ -23,6 +29,10 @@ form label span {
 
 .interact .function .argument {
     margin-left: 10px;
+}
+
+.interact .function .response {
+    margin-top: 5px;
 }
 
 .interact .search {
@@ -38,6 +48,10 @@ form label span {
     text-align: center;
 }
 
+.link-container {
+    text-align: center;
+}
+
 .link {
     color: #76ffffff;
     text-decoration: none;
@@ -46,4 +60,27 @@ form label span {
 .link svg {
     vertical-align: middle;
     margin-left: 2px;
+}
+
+.spinner {
+    right: 20px;
+    position: absolute;
+    width: 25px !important;
+    height: 25px !important;
+}
+
+.metadata-card {
+    padding: 10px 20px 0 20px;
+    margin-bottom: 20px;
+}
+
+.MuiAlert-root {
+    position: fixed;
+    bottom: 15px;
+    left: 15px;
+}
+
+hr {
+    background-color: #008080ff !important;
+    margin-top: 10px !important;
 }
