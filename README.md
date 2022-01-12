@@ -3,10 +3,15 @@
   <img src="/public/logo512.png" width="350" title="Aurora Token Factory">
 </p>
 
-[Website](https://aurora-token-factory.web.app/)
+Aurora Token Factory is a dApp that provides an easy way to create ERC-20 tokens and interact with its contracts in the [Aurora network](https://aurora.dev/).
 
+![Screenshot 2](/images/Screenshot_2.png)
 
-# Getting Started with Create React App
+![Screenshot 3](/images/Screenshot_3.png)
+
+### [Live dApp](https://aurora-token-factory.web.app/)
+
+# Develpment
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
@@ -76,3 +81,6 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+# License
+[MIT license](LICENSE).
