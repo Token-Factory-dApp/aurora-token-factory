@@ -107,7 +107,7 @@ function Create() {
         }
       } catch (err) {
         setLoading(false);
-        debugger
+
         if (err.code === 4001) {
           setAlert({ type: "info", msg: "Operation canceled by user." });
         } else if (err.message) {
@@ -156,7 +156,7 @@ function Create() {
 
   return (
     <div className="create">
-      <h1>Create ERC20 token</h1>
+      <h1>Create ERC-20 token</h1>
       <form onSubmit={deploy}>
         <Grid container spacing={1}>
           <Grid xs={12} md={4} item>

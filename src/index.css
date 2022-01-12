@@ -12,6 +12,11 @@ form label span {
     margin-top: 20px;
 }
 
+.create .spinner {
+    right: 20px;
+    position: absolute;
+}
+
 .interact .label {
     color: #76ffffff;
     margin-right: 5px;
@@ -62,13 +67,6 @@ form label span {
     margin-left: 2px;
 }
 
-.spinner {
-    right: 20px;
-    position: absolute;
-    width: 25px !important;
-    height: 25px !important;
-}
-
 .metadata-card {
     padding: 10px 20px 0 20px;
     margin-bottom: 20px;
@@ -78,9 +76,16 @@ form label span {
     position: fixed;
     bottom: 15px;
     left: 15px;
+    z-index: 99;
+    margin-right: 15px;
 }
 
 hr {
     background-color: #008080ff !important;
     margin-top: 10px !important;
+}
+
+.spinner {
+    width: 25px !important;
+    height: 25px !important;
 }

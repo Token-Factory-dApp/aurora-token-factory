@@ -6,6 +6,7 @@ import { Button, Grid, TextField } from "@mui/material";
 import { Divider } from "@material-ui/core";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import CircularProgress from "@mui/material/CircularProgress";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 import Alert from "@mui/material/Alert";
 import CloseIcon from "@mui/icons-material/Close";
@@ -145,6 +146,9 @@ function Interact() {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
 
       try {
+        func.response = { type: "loading" };
+        setAbiFuncs([...abiFuncs]);
+
         const contract = new ethers.Contract(
           contractAddress,
           abiFuncs,
@@ -152,30 +156,43 @@ function Interact() {
         );
 
         const res = await contract[func.name].apply(this, inputValues);
+        console.log(res); // TODO
 
-        func.response =
-          typeof res === "object"
-            ? res._hex
-              ? parseInt(res._hex, 16)
-              : "Error getting response"
-            : res;
-
-        setAbiFuncs([...abiFuncs]);
+        if (typeof res === "object") {
+          if (res._hex) {
+            func.response = { type: "text", value: parseInt(res._hex, 16) };
+          } else if (res.hash) {
+            func.response = { type: "hash", value: res.hash };
+          } else {
+            func.response = {};
+            setAlert({
+              type: "error",
+              msg: "An error has occurred.",
+            });
+          }
+        } else {
+          func.response = { type: "text", value: res };
+        }
       } catch (err) {
+        func.response = {};
+
         if (err.code === 4001) {
           setAlert({ type: "info", msg: "Operation canceled by user." });
         } else if (err.message) {
-          setAlert({ type: "error", msg: err.message });
+          setAlert({ type: "error", msg: getErrorMessage(err.message) });
         } else {
           setAlert({
             type: "error",
-            msg: "An error has occurred in the creation of your token.",
+            msg: "An error has occurred.",
           });
         }
       }
     } else {
+      func.response = {};
       setAlert({ type: "error", msg: "Connect to your Metamask extension." });
     }
+
+    setAbiFuncs([...abiFuncs]);
   }
 
   /**
@@ -186,6 +203,20 @@ function Interact() {
     if (addressRef.current.value) {
       history("/Interact/" + addressRef.current.value);
     }
+  }
+
+  /**
+   * Util to get error message from response.
+   */
+  function getErrorMessage(message) {
+    if (message.startsWith("[ethjs-query] while formatting outputs from RPC")) {
+      const extractMsg = JSON.parse(
+        message.substring(message.indexOf("{"), message.lastIndexOf("}") + 1)
+      ).value?.data?.message;
+      return extractMsg ? extractMsg : "An error has occurred.";
+    }
+
+    return message;
   }
 
   return (
@@ -226,7 +257,7 @@ function Interact() {
                 href={`${BASE_URL}/address/${contractAddress}/contracts`}
                 className="link"
               >
-                <span>View in explorer</span>
+                <span>View contract in explorer</span>
                 <LaunchRoundedIcon fontSize="small" />
               </a>
             </div>
@@ -289,7 +320,17 @@ function Interact() {
               />
             ))}
           </div>
-          <div className="response">{func.response}</div>
+          <div className="response">
+            {func.response?.type && func.response.type === "text" && (
+              <span>{func.response.value}</span>
+            )}
+            {func.response?.type && func.response.type === "hash" && (
+              <span>tx hash: {func.response.value}</span>
+            )}
+            {func.response?.type && func.response.type === "loading" && (
+              <CircularProgress color="secondary" className="spinner" />
+            )}
+          </div>
           <Divider />
         </div>
       ))}
