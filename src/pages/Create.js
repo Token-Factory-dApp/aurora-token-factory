@@ -5,8 +5,10 @@ import { ethers, ContractFactory } from "ethers";
 import { Button, Grid, TextField } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
-import CloseIcon from "@mui/icons-material/Close";
 import IconButton from "@mui/material/IconButton";
+import CloseIcon from "@mui/icons-material/Close";
+import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
+import Tooltip from "@mui/material/Tooltip";
 import contractAbi from "../contract/abi.json";
 import contractByteCode from "../contract/bytecode.json";
 // import { SOURCE_CODE } from "../contract/ERC20_flat";
@@ -216,7 +218,14 @@ function Create() {
             />
           </Grid>
           <Grid xs={12} md={8} item>
-            <label>Owner address</label>
+            <label>
+              Owner address
+              <Tooltip title="If not provided, the current address will be used.">
+                <IconButton color="secondary">
+                  <InfoRoundedIcon />
+                </IconButton>
+              </Tooltip>
+            </label>
             <TextField
               inputRef={ownerRef}
               placeholder="e.g. 0xabc123abc123abc123abc123abc123abc123abc1"
@@ -231,9 +240,10 @@ function Create() {
               variant="contained"
               color="primary"
               fullWidth
+              className="submit"
               disabled={loading}
             >
-              Create{" "}
+              Create
               {loading && (
                 <CircularProgress color="secondary" className="spinner" />
               )}

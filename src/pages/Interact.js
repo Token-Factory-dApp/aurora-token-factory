@@ -156,7 +156,6 @@ function Interact() {
         );
 
         const res = await contract[func.name].apply(this, inputValues);
-        console.log(res); // TODO
 
         if (typeof res === "object") {
           if (res._hex) {
@@ -316,7 +315,9 @@ function Interact() {
                 name={`${func.name}-${input.name}`}
                 onChange={inputChange}
                 key={input.name}
-                className="argument"
+                className={
+                  input.type === "address" ? "argument address" : "argument"
+                }
               />
             ))}
           </div>

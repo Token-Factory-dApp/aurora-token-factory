@@ -44,6 +44,7 @@ const MainNavigation = () => {
               src="/logo192_alt.png"
               className={classes.logo}
               onClick={() => handleNavigate("Home")}
+              alt="Logo"
             ></img>
           </Typography>
 
@@ -84,6 +85,7 @@ const MainNavigation = () => {
               src="/logo192_alt.png"
               className={classes.logo}
               onClick={() => handleNavigate("Home")}
+              alt="Logo"
             ></img>
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>

@@ -1,8 +1,8 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
-import MainNavigation from './components/navigation/MainNavigation';
-import Create from './pages/Create';
-import Home from './pages/Home';
-import Interact from './pages/Interact';
+import { Navigate, Route, Routes } from "react-router-dom";
+import MainNavigation from "./navigation/MainNavigation";
+import Create from "./pages/Create";
+import Home from "./pages/Home";
+import Interact from "./pages/Interact";
 
 function App() {
   return (
@@ -13,7 +13,11 @@ function App() {
           <Route path="/home" element={<Home />} exact />
           <Route path="/create" element={<Create />} exact />
           <Route path="/interact" element={<Interact />} exact />
-          <Route path="/interact/:contractAddress" element={<Interact />} exact />
+          <Route
+            path="/interact/:contractAddress"
+            element={<Interact />}
+            exact
+          />
           <Route path="/" element={<Navigate replace to="/home" />} exact />
         </Routes>
       </div>

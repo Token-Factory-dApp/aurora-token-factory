@@ -1,5 +1,3 @@
-// TODO remove
-
 export const SOURCE_CODE = 
 `// SPDX-License-Identifier: MIT
 
