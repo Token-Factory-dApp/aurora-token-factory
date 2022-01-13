@@ -21,8 +21,8 @@ function Interact() {
   const TESTNET_ID = "0x4e454153";
   const MAINNET_BASE_URL = "https://explorer.mainnet.aurora.dev";
   const TESTNET_BASE_URL = "https://explorer.testnet.aurora.dev";
-  const CHAIN_ID = TESTNET_ID;
-  const BASE_URL = TESTNET_BASE_URL;
+  const CHAIN_ID = MAINNET_ID;
+  const BASE_URL = MAINNET_BASE_URL;
   const [abiFuncs, setAbiFuncs] = useState([]);
   const [metadata, setMetadata] = useState();
   const [notFound, setNotFound] = useState(false);
@@ -48,14 +48,17 @@ function Interact() {
    * Requests for Metamask account
    */
   async function requestAccount() {
-    if (window.ethereum.chainId !== CHAIN_ID) {
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: CHAIN_ID }],
-      });
+    try {
+      if (window.ethereum.chainId !== CHAIN_ID) {
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: CHAIN_ID }],
+        });
+      }
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+    } catch (err) {
+      throw new Error(err.message);
     }
-
-    await window.ethereum.request({ method: "eth_requestAccounts" });
   }
 
   /**
@@ -142,10 +145,10 @@ function Interact() {
     });
 
     if (typeof window.ethereum !== "undefined") {
-      await requestAccount();
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-
       try {
+        await requestAccount();
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+
         func.response = { type: "loading" };
         setAbiFuncs([...abiFuncs]);
 

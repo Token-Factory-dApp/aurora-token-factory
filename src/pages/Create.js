@@ -21,8 +21,8 @@ function Create() {
   const TESTNET_ID = "0x4e454153";
   const MAINNET_BASE_URL = "https://explorer.mainnet.aurora.dev";
   const TESTNET_BASE_URL = "https://explorer.testnet.aurora.dev";
-  const CHAIN_ID = TESTNET_ID;
-  const BASE_URL = TESTNET_BASE_URL;
+  const CHAIN_ID = MAINNET_ID;
+  const BASE_URL = MAINNET_BASE_URL;
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState();
   const nameRef = useRef();
@@ -36,14 +36,17 @@ function Create() {
    * Requests for Metamask account
    */
   async function requestAccount() {
-    if (window.ethereum.chainId !== CHAIN_ID) {
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: CHAIN_ID }],
-      });
+    try {
+      if (window.ethereum.chainId !== CHAIN_ID) {
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: CHAIN_ID }],
+        });
+      }
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+    } catch (err) {
+      throw new Error(err.message);
     }
-
-    await window.ethereum.request({ method: "eth_requestAccounts" });
   }
 
   /**
@@ -53,11 +56,11 @@ function Create() {
     event.preventDefault();
 
     if (typeof window.ethereum !== "undefined") {
-      await requestAccount();
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-
       try {
+        await requestAccount();
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+
         setLoading(true);
 
         const factory = new ContractFactory(
