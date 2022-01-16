@@ -4,13 +4,14 @@
 </p>
 
 Aurora Token Factory is a dApp that provides an easy way to create ERC-20 tokens and interact with its contracts in the [Aurora network](https://aurora.dev/).
+
+### [Live dApp](https://aurora-token-factory.web.app/)
+
 [![Video](/images/yt_preview.png)](https://youtu.be/PAe8iUoUL9s)
 
 ![Screenshot 2](/images/Screenshot_2.png)
 
 ![Screenshot 3](/images/Screenshot_3.png)
-
-### [Live dApp](https://aurora-token-factory.web.app/)
 
 # Develpment
 
